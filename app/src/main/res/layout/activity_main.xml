@@ -32,9 +32,18 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <Button
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/textView"/>
+        android:text="Parse XML"
+        android:id="@+id/parseButton"/>
+
+    <ListView
+        android:visibility="invisible"
+        android:layout_marginTop="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/parseListView"
+        android:layout_below="@+id/parseButton"/>
 
 </RelativeLayout>

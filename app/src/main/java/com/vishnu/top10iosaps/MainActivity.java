@@ -31,6 +31,10 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import java.io.IOException;
@@ -38,20 +42,52 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 
 
 public class MainActivity extends Activity {
 
-    TextView textView;
+    Button parseButton;
+    ListView parseListView;
+
+    String mXmlData = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textView  = (TextView)findViewById(R.id.textView);
+        parseButton = (Button)findViewById(R.id.parseButton);
+        parseListView = (ListView)findViewById(R.id.parseListView);
 
-        new DownloadData().execute("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml");
+        new DownloadData().
+                execute("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplications/limit=10/xml");
+
+        parseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                ParseXMLData parseXMLData = new ParseXMLData(mXmlData);
+                boolean operationStatus = parseXMLData.process();
+
+                if(operationStatus)
+                {
+                    ArrayList<Application> arrayList = parseXMLData.getApplicationArrayList();
+                    ArrayAdapter<Application> applicationArrayAdapter =
+                            new ArrayAdapter<>(MainActivity.this, R.layout.item_list_app, arrayList);
+                    parseListView.setVisibility(View.VISIBLE);
+                    parseListView.setAdapter(applicationArrayAdapter);
+
+                }
+                else
+                {
+                    Log.e("Parsing XML", " error");
+                }
+
+            }
+        });
+
+
     }
 
     @Override
@@ -76,59 +112,7 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    private String downloadXML(String url) throws IOException {
 
-        // how many characters at a time we are gonna download from file
-        final int BUFFER_SIZE = 2000;
-
-        InputStream inputStream = null;
-        String xmlContents = "";
-
-
-        try {
-            URL mUrl = new URL(url);
-            HttpURLConnection httpURLConnection = (HttpURLConnection) mUrl.openConnection();
-            httpURLConnection.setReadTimeout(10000);
-            httpURLConnection.setConnectTimeout(15000);
-            httpURLConnection.setRequestMethod("GET");
-            ;
-            httpURLConnection.setDoInput(true);
-
-            int response = httpURLConnection.getResponseCode();
-            Log.d("ResponseCode", response + "");
-
-            inputStream = httpURLConnection.getInputStream();
-
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            int charRead;
-            char[] inputBuffer = new char[BUFFER_SIZE];
-
-            try {
-                while ((charRead = inputStreamReader.read(inputBuffer)) > 0) {
-                    String readString = String.copyValueOf(inputBuffer, 0, charRead);
-                    xmlContents += readString;
-                    inputBuffer = new char[BUFFER_SIZE];
-                }
-
-                return xmlContents;
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-
-
-        } catch (Exception e) {
-            Log.e("downLoadXML", e.toString());
-        } finally {
-            if (inputStream != null) {
-                inputStream.close();
-            }
-        }
-
-
-        return "";
-    }
 
 
     private class DownloadData extends AsyncTask<String, Void, String> {
@@ -137,9 +121,7 @@ public class MainActivity extends Activity {
 
         @Override
         protected void onPostExecute(String s) {
-
-            Log.d("OnPostExecute", xmlData);
-            textView.setText(xmlData);
+            mXmlData = xmlData;
         }
 
         @Override
@@ -152,6 +134,60 @@ public class MainActivity extends Activity {
                 Log.e("DownloadData", e.toString());
                 return "Cannot download xml file";
             }
+
+            return "";
+        }
+
+        private String downloadXML(String url) throws IOException {
+
+            // how many characters at a time we are gonna download from file
+            final int BUFFER_SIZE = 2000;
+
+            InputStream inputStream = null;
+            String xmlContents = "";
+
+
+            try {
+                URL mUrl = new URL(url);
+                HttpURLConnection httpURLConnection = (HttpURLConnection) mUrl.openConnection();
+                httpURLConnection.setReadTimeout(10000);
+                httpURLConnection.setConnectTimeout(15000);
+                httpURLConnection.setRequestMethod("GET");
+
+                httpURLConnection.setDoInput(true);
+
+                int response = httpURLConnection.getResponseCode();
+                //Log.d("ResponseCode", response + "");
+
+                inputStream = httpURLConnection.getInputStream();
+
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                int charRead;
+                char[] inputBuffer = new char[BUFFER_SIZE];
+
+                try {
+                    while ((charRead = inputStreamReader.read(inputBuffer)) > 0) {
+                        String readString = String.copyValueOf(inputBuffer, 0, charRead);
+                        xmlContents += readString;
+                        inputBuffer = new char[BUFFER_SIZE];
+                    }
+
+                    return xmlContents;
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
+                }
+
+
+            } catch (Exception e) {
+                Log.e("downLoadXML", e.toString());
+            } finally {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            }
+
 
             return "";
         }
