@@ -27,19 +27,27 @@ package com.vishnu.top10iosaps;
 import android.util.Log;
 
 import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 
 /**
- * Created by vishnu on 29/6/15.
+ * Parses XML data into readable and usable strings.
  */
 public class ParseXMLData {
+
 
     private String mXmlData = "";
     private ArrayList<Application> applicationArrayList;
 
+    /**
+     * Takes the raw XML data as argument
+     *
+     * @param xmlData
+     */
     public ParseXMLData(String xmlData) {
 
         this.mXmlData = xmlData;
@@ -58,16 +66,38 @@ public class ParseXMLData {
 
         try {
 
+            /*
+                org.xmlpull.v1.XmlPullParser is an interface in the XMLPULL V1 API from the xml.org
+
+                some of the important methods of XmlPullParser are: next() which provides access to high level
+                parsing events; nextToken() provides access to lower level tokens.
+
+                Current event state of the parser can be determined by calling getEventType() method
+
+                org.xmlpull.v1.XmlPullParserFactory is an abstract class which is used to create implementations
+                of XML Pull Parser.
+             */
+
             XmlPullParserFactory xmlPullParserFactory = XmlPullParserFactory.newInstance();
             xmlPullParserFactory.setNamespaceAware(true);
             XmlPullParser xmlPullParser = xmlPullParserFactory.newPullParser();
 
             xmlPullParser.setInput(new StringReader(mXmlData));
+
+            /*
+                getEventType returns the type of the current event like START_TAG, END_TAG, TEXT, END_DOCUMENT, etc
+             */
             int eventType = xmlPullParser.getEventType();
 
+            /*
+                We check if we are at the end of the document in a loop, while traversing through the tags of the XML String 'mXmlData'
+             */
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 String tagName = xmlPullParser.getName();
 
+                /*
+                    eventType is checked for START_TAG.
+                 */
                 if (eventType == XmlPullParser.START_TAG) {
                     if (tagName.equalsIgnoreCase("entry")) {
                         inEntry = true;
@@ -78,6 +108,7 @@ public class ParseXMLData {
                     textValue = xmlPullParser.getText();
                 } else if (eventType == XmlPullParser.END_TAG) {
                     if (inEntry) {
+
                         if (tagName.equalsIgnoreCase("entry")) {
                             applicationArrayList.add(currentRecord);
                             inEntry = false;
@@ -93,7 +124,7 @@ public class ParseXMLData {
                 }
                 eventType = xmlPullParser.next();
             }
-        } catch (Exception e) {
+        } catch (XmlPullParserException | IOException e) {
             e.printStackTrace();
             operationStatus = false;
         }

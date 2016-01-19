@@ -56,10 +56,7 @@ public class Application {
     }
 
 
-    public String toString()
-    {
-
-
+    public String toString() {
         return "NAME: " + this.name + " ARTIST: " + this.artist + " RELEASE DATE: " + this.releaseDate;
     }
 }
